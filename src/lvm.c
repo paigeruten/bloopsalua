@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include "bloopsaphone.h"
 
 #include "lua.h"
 
@@ -1125,6 +1127,17 @@ void luaV_finishOp (lua_State *L) {
 #define vmcase(l)	case l:
 #define vmbreak		break
 
+void bloopsaplay(char *notes) {
+  bloops *B = bloops_new();
+  B->tempo = 1000;
+  bloopsaphone *P = bloops_square();
+  bloopsatrack *track = bloops_track2(B, P, notes);
+  bloops_sound_destroy(P);
+  bloops_play(B);
+  while (!bloops_is_done(B)) usleep(100);
+  bloops_track_destroy(track);
+  bloops_destroy(B);
+}
 
 void luaV_execute (lua_State *L, CallInfo *ci) {
   LClosure *cl;
@@ -1156,6 +1169,34 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
     Instruction i;  /* instruction being executed */
     StkId ra;  /* instruction's A register */
     vmfetch();
+
+    // ignore the VARARGPREP instruction that comes at the beginning of every bit of code ran by the REPL.
+    if (!(ci->previous && ci->previous->previous == NULL && GET_OPCODE(i) == OP_VARARGPREP)) {
+      OpCode opcode = GET_OPCODE(i);
+      switch (opcode) {
+        case OP_ADD:
+          bloopsaplay("e");
+          break;
+
+        case OP_ADDI:
+        case OP_ADDK:
+          bloopsaplay("g");
+          break;
+
+        case OP_LT:
+        case OP_LTI:
+        case OP_LE:
+        case OP_LEI:
+        case OP_GTI:
+        case OP_GEI:
+          bloopsaplay("c");
+          break;
+
+        default:
+          break;
+      }
+    }
+
 // low-level line tracing for debugging Lua
 // printf("line: %d\n", luaG_getfuncline(cl->p, pcRel(pc, cl->p)));
     lua_assert(base == ci->func + 1);
