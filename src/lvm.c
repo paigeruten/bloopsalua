@@ -1174,25 +1174,131 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
     if (!(ci->previous && ci->previous->previous == NULL && GET_OPCODE(i) == OP_VARARGPREP)) {
       OpCode opcode = GET_OPCODE(i);
       switch (opcode) {
-        case OP_ADD:
-          bloopsaplay("e");
-          break;
-
-        case OP_ADDI:
-        case OP_ADDK:
-          bloopsaplay("g");
-          break;
-
-        case OP_LT:
-        case OP_LTI:
-        case OP_LE:
-        case OP_LEI:
-        case OP_GTI:
-        case OP_GEI:
+        // Return
+        case OP_RETURN:
+        case OP_RETURN0:
+        case OP_RETURN1:
           bloopsaplay("c");
           break;
 
-        default:
+        // Add/subtract
+        case OP_ADD:
+        case OP_ADDI:
+        case OP_ADDK:
+        case OP_SUB:
+        case OP_SUBK:
+        case OP_UNM:
+          bloopsaplay("d");
+          break;
+
+        // Bitwise/misc operators
+        case OP_BANDK:
+        case OP_BORK:
+        case OP_BXORK:
+        case OP_SHRI:
+        case OP_SHLI:
+        case OP_BAND:
+        case OP_BOR:
+        case OP_BXOR:
+        case OP_SHL:
+        case OP_SHR:
+        case OP_BNOT:
+        case OP_NOT:
+        case OP_LEN:
+        case OP_CONCAT:
+          bloopsaplay("d#");
+          break;
+
+        // Multiply/divide
+        case OP_MUL:
+        case OP_MULK:
+        case OP_POW:
+        case OP_POWK:
+        case OP_DIV:
+        case OP_DIVK:
+        case OP_IDIV:
+        case OP_IDIVK:
+        case OP_MODK:
+        case OP_MOD:
+          bloopsaplay("e");
+          break;
+
+        // Get
+        case OP_GETUPVAL:
+        case OP_GETTABUP:
+        case OP_GETTABLE:
+        case OP_GETI:
+        case OP_GETFIELD:
+        case OP_SELF:
+          bloopsaplay("f");
+          break;
+
+        // Set
+        case OP_SETUPVAL:
+        case OP_SETTABUP:
+        case OP_SETTABLE:
+        case OP_SETI:
+        case OP_SETFIELD:
+        case OP_SETLIST:
+          bloopsaplay("f#");
+          break;
+
+        // Call
+        case OP_MMBIN:
+        case OP_MMBINI:
+        case OP_MMBINK:
+        case OP_CALL:
+        case OP_TAILCALL:
+          bloopsaplay("g");
+          break;
+
+        // Literal
+        case OP_LOADI:
+        case OP_LOADF:
+        case OP_LOADK:
+        case OP_LOADKX:
+        case OP_LOADFALSE:
+        case OP_LOADTRUE:
+        case OP_LOADNIL:
+        case OP_NEWTABLE:
+          bloopsaplay("g#");
+          break;
+
+        // Test
+        case OP_EQ:
+        case OP_LT:
+        case OP_LE:
+        case OP_EQK:
+        case OP_EQI:
+        case OP_LTI:
+        case OP_LEI:
+        case OP_GTI:
+        case OP_GEI:
+        case OP_TEST:
+        case OP_TESTSET:
+          bloopsaplay("a");
+          break;
+
+        // Misc
+        case OP_MOVE:
+        case OP_CLOSE:
+        case OP_TBC:
+        case OP_FORPREP:
+        case OP_TFORPREP:
+        case OP_CLOSURE:
+        case OP_VARARG:
+        case OP_VARARGPREP:
+        case OP_EXTRAARG:
+          bloopsaplay("a#");
+          break;
+          
+        // Jump
+        case OP_JMP:
+        case OP_LFALSESKIP:
+        case OP_FORLOOP:
+        case OP_TFORLOOP:
+        case OP_TFORCALL:
+          bloopsaplay("b");
           break;
       }
     }
