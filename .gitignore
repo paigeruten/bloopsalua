@@ -1,4 +1,4 @@
-bloops/lbloops.so
+bloops/bloops.so
 lua/*.o
 lua/*.a
 lua/lua
