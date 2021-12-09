@@ -36,16 +36,16 @@ static int l_bloops_play(lua_State *L) {
   return 0;
 }
 
+static const luaL_Reg bloops_methods[] = {
+  {"new", l_bloops_new},
+  {"play", l_bloops_play},
+  {NULL, NULL}
+};
+
 extern int luaopen_bloops(lua_State *L) {
-  lua_newtable(L);
+  luaL_newlib(L, bloops_methods);
   lua_pushliteral(L, "__index");
   lua_pushvalue(L, -2);
-  lua_rawset(L, -3);
-  lua_pushliteral(L, "new");
-  lua_pushcfunction(L, l_bloops_new);
-  lua_rawset(L, -3);
-  lua_pushliteral(L, "play");
-  lua_pushcfunction(L, l_bloops_play);
   lua_rawset(L, -3);
   lua_setglobal(L, "Bloops");
 
