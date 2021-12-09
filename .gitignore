@@ -1,4 +1,5 @@
-src/*.o
-src/*.a
-src/lua
-src/luac
+bloops/lbloops.so
+lua/*.o
+lua/*.a
+lua/lua
+lua/luac
