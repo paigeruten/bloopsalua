@@ -61,17 +61,41 @@ static int l_bloops_meta_index(lua_State *L) {
   return 1;
 }
 
+static int l_bloops_meta_newindex(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TUSERDATA);
+  lua_getiuservalue(L, 1, 1);
+  luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops instance");
+  bloops *B = lua_touserdata(L, -1);
+
+  if (lua_isstring(L, 2)) {
+    lua_pushvalue(L, 2);
+    const char *key = lua_tostring(L, -1);
+    if (!strcmp(key, "tempo")) {
+      B->tempo = luaL_checkinteger(L, 3);
+      return 0;
+    }
+  }
+
+  if (!lua_getmetatable(L, 1)) {
+    return luaL_argerror(L, 1, "not a valid Bloops instance");
+  }
+
+  lua_pushvalue(L, 2);
+  lua_pushvalue(L, 3);
+  lua_rawset(L, -3);
+  return 0;
+}
+
 static const luaL_Reg bloops_methods[] = {
   {"new", l_bloops_new},
   {"play", l_bloops_play},
+  {"__index", l_bloops_meta_index},
+  {"__newindex", l_bloops_meta_newindex},
   {NULL, NULL}
 };
 
 extern int luaopen_bloops(lua_State *L) {
   luaL_newlib(L, bloops_methods);
-  lua_pushliteral(L, "__index");
-  lua_pushcfunction(L, l_bloops_meta_index);
-  lua_rawset(L, -3);
   lua_setglobal(L, "Bloops");
 
   return 0;
