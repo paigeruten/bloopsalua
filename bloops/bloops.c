@@ -1,3 +1,4 @@
+#include <string.h>
 #include <unistd.h>
 #include "bloopsaphone.h"
 #include "lua.h"
@@ -36,6 +37,30 @@ static int l_bloops_play(lua_State *L) {
   return 0;
 }
 
+static int l_bloops_meta_index(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TUSERDATA);
+  lua_getiuservalue(L, 1, 1);
+  luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops instance");
+  bloops *B = lua_touserdata(L, -1);
+
+  if (lua_isstring(L, 2)) {
+    lua_pushvalue(L, 2);
+    const char *key = lua_tostring(L, -1);
+    if (!strcmp(key, "tempo")) {
+      lua_pushinteger(L, B->tempo);      
+      return 1;
+    }
+  }
+
+  if (!lua_getmetatable(L, 1)) {
+    return luaL_argerror(L, 1, "not a valid Bloops instance");
+  }
+
+  lua_pushvalue(L, 2);
+  lua_rawget(L, -2);
+  return 1;
+}
+
 static const luaL_Reg bloops_methods[] = {
   {"new", l_bloops_new},
   {"play", l_bloops_play},
@@ -45,7 +70,7 @@ static const luaL_Reg bloops_methods[] = {
 extern int luaopen_bloops(lua_State *L) {
   luaL_newlib(L, bloops_methods);
   lua_pushliteral(L, "__index");
-  lua_pushvalue(L, -2);
+  lua_pushcfunction(L, l_bloops_meta_index);
   lua_rawset(L, -3);
   lua_setglobal(L, "Bloops");
 
