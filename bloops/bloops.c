@@ -21,19 +21,12 @@ static int l_bloops_new(lua_State *L) {
 
 static int l_bloops_play(lua_State *L) {
   luaL_checktype(L, 1, LUA_TUSERDATA);
-  const char *notes = luaL_checkstring(L, 2);
-
   lua_getiuservalue(L, 1, 1);
   luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops instance");
   bloops *B = lua_touserdata(L, -1);
 
-  bloopsaphone *P = bloops_square();
-  bloopsatrack *track = bloops_track2(B, P, (char *)notes);
-  bloops_sound_destroy(P);
   bloops_play(B);
-  while (!bloops_is_done(B)) usleep(1000);
-  bloops_track_destroy(track);
-  //bloops_destroy(B);
+  //while (!bloops_is_done(B)) usleep(1000);
   return 0;
 }
 
@@ -60,6 +53,30 @@ static int l_bloops_sleep(lua_State *L) {
   usleep((lua_Integer)(seconds * 1000000));
 
   return 0;
+}
+
+static int l_bloops_tune(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TUSERDATA);
+  luaL_checktype(L, 2, LUA_TUSERDATA);
+  const char *notes = luaL_checkstring(L, 3);
+
+  lua_getiuservalue(L, 1, 1);
+  luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops instance");
+  bloops *B = lua_touserdata(L, -1);
+
+  lua_getiuservalue(L, 2, 1);
+  luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops.Sound instance");
+  bloopsaphone *phone = lua_touserdata(L, -1);
+
+  bloopsatrack *track = bloops_track(B, phone, (char *)notes, strlen(notes));
+
+  lua_newuserdatauv(L, 0, 1);
+  lua_pushlightuserdata(L, track);
+  lua_setiuservalue(L, -2, 1);
+  lua_getfield(L, 1, "Track");
+  lua_setmetatable(L, -2);
+
+  return 1;
 }
 
 static int l_bloops_meta_tostring(lua_State *L) {
@@ -149,11 +166,22 @@ static int l_bloops_sound_meta_tostring(lua_State *L) {
   return 1;
 }
 
+static int l_bloops_track_meta_tostring(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TUSERDATA);
+  lua_getiuservalue(L, 1, 1);
+  luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops.Track instance");
+  bloopsatrack *track = lua_touserdata(L, -1);
+
+  lua_pushfstring(L, "Bloops.Track: %p", track);
+  return 1;
+}
+
 static const luaL_Reg bloops_methods[] = {
   {"new", l_bloops_new},
   {"play", l_bloops_play},
   {"sound", l_bloops_sound},
   {"sleep", l_bloops_sleep},
+  {"tune", l_bloops_tune},
   {"__tostring", l_bloops_meta_tostring},
   {"__index", l_bloops_meta_index},
   {"__newindex", l_bloops_meta_newindex},
@@ -163,6 +191,11 @@ static const luaL_Reg bloops_methods[] = {
 static const luaL_Reg bloops_sound_methods[] = {
   {"test", l_bloops_sound_test},
   {"__tostring", l_bloops_sound_meta_tostring},
+  {NULL, NULL}
+};
+
+static const luaL_Reg bloops_track_methods[] = {
+  {"__tostring", l_bloops_track_meta_tostring},
   {NULL, NULL}
 };
 
@@ -182,6 +215,9 @@ extern int luaopen_bloops(lua_State *L) {
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
   lua_setfield(L, -2, "Sound");
+
+  luaL_newlib(L, bloops_track_methods);
+  lua_setfield(L, -2, "Track");
 
   lua_setglobal(L, "Bloops");
 
