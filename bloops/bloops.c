@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "bloopsaphone.h"
@@ -30,6 +31,16 @@ static int l_bloops_play(lua_State *L) {
   return 0;
 }
 
+static int l_bloops_is_stopped(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TUSERDATA);
+  lua_getiuservalue(L, 1, 1);
+  luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops instance");
+  bloops *B = lua_touserdata(L, -1);
+
+  lua_pushboolean(L, bloops_is_done(B));
+  return 1;
+}
+
 static int l_bloops_sound(lua_State *L) {
   luaL_checktype(L, 1, LUA_TUSERDATA);
   lua_Integer waveform = luaL_optinteger(L, 2, BLOOPS_SQUARE);
@@ -44,15 +55,6 @@ static int l_bloops_sound(lua_State *L) {
   lua_setmetatable(L, -2);
 
   return 1;
-}
-
-static int l_bloops_sleep(lua_State *L) {
-  luaL_checktype(L, 1, LUA_TUSERDATA);
-  lua_Number seconds = luaL_checknumber(L, 2);
-
-  usleep((lua_Integer)(seconds * 1000000));
-
-  return 0;
 }
 
 static int l_bloops_tune(lua_State *L) {
@@ -77,6 +79,15 @@ static int l_bloops_tune(lua_State *L) {
   lua_setmetatable(L, -2);
 
   return 1;
+}
+
+static int l_bloops_sleep(lua_State *L) {
+  luaL_checktype(L, 1, LUA_TUSERDATA);
+  lua_Number seconds = luaL_checknumber(L, 2);
+
+  usleep((lua_Integer)(seconds * 1000000));
+
+  return 0;
 }
 
 static int l_bloops_meta_tostring(lua_State *L) {
@@ -162,7 +173,10 @@ static int l_bloops_sound_meta_tostring(lua_State *L) {
   luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops.Sound instance");
   bloopsaphone *P = lua_touserdata(L, -1);
 
-  lua_pushfstring(L, "Bloops.Sound: %p", P);
+  char *str = bloops_sound_str(P);
+  lua_pushfstring(L, "Bloops.Sound: %p\n%s", P, str);
+  free(str);
+  
   return 1;
 }
 
@@ -172,16 +186,20 @@ static int l_bloops_track_meta_tostring(lua_State *L) {
   luaL_argcheck(L, lua_islightuserdata(L, -1), 1, "not a valid Bloops.Track instance");
   bloopsatrack *track = lua_touserdata(L, -1);
 
-  lua_pushfstring(L, "Bloops.Track: %p", track);
+  char *str = bloops_track_str(track);
+  lua_pushfstring(L, "Bloops.Track: %p\n%s", track, str);
+  free(str);
+
   return 1;
 }
 
 static const luaL_Reg bloops_methods[] = {
   {"new", l_bloops_new},
   {"play", l_bloops_play},
+  {"is_stopped", l_bloops_is_stopped},
   {"sound", l_bloops_sound},
-  {"sleep", l_bloops_sleep},
   {"tune", l_bloops_tune},
+  {"sleep", l_bloops_sleep},
   {"__tostring", l_bloops_meta_tostring},
   {"__index", l_bloops_meta_index},
   {"__newindex", l_bloops_meta_newindex},
